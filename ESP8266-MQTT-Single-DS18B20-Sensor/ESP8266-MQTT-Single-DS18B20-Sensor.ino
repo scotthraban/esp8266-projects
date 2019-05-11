@@ -76,6 +76,9 @@ void reconnect() {
 void startWifi() {
   delay(50);
 
+  // Ensure that ESP8266 only starts up in Station mode
+  WiFi.mode(WIFI_STA);
+
   WiFi.begin(WIFI_SSID, WIFI_PWD);
 
   while (WiFi.status() != WL_CONNECTED) {
