@@ -55,7 +55,7 @@ void loop()
     float temperature = static_cast<float>(static_cast<int>(
       (METRIC ? sensors.getTempCByIndex(0) : sensors.getTempFByIndex(0)) * 10.)) / 10.;
  
-    if (temperature != -127.00 && temperature != 85.00) {
+    if (temperature != 85.00 && temperature > -32.0) {
       client.publish(MQTT_TOPIC, String(temperature).c_str());
     }
   } else {
@@ -78,6 +78,12 @@ void startWifi() {
 
   // Ensure that ESP8266 only starts up in Station mode
   WiFi.mode(WIFI_STA);
+
+  // Save some power, produce less corrupting heat
+  WiFi.setSleepMode(WIFI_LIGHT_SLEEP);
+
+  // Set the hostname, reusing the mqtt client id
+  WiFi.hostname(MQTT_CLIENT_ID);
 
   WiFi.begin(WIFI_SSID, WIFI_PWD);
 
