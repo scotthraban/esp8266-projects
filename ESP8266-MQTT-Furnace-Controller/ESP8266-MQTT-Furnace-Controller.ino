@@ -28,6 +28,7 @@ long lastCommandReceived = 0;
 void setup()
 {
   pinMode(TRANSISTOR_OUT_PIN, OUTPUT);
+
   setSwitch(0);
 
   startWifi();
@@ -49,12 +50,12 @@ void loop()
       client.subscribe(MQTT_TOPIC);
     } else {
       // (re)connect failure, sleep and try again later
-      delay(1000);
+      delay(5000);
     }
   } else {
     // connected - process messages, sleep a bit and go around again
     client.loop();
-    delay(1000);
+    delay(500);
   }
 }
 
@@ -62,46 +63,15 @@ void processMessage(char* topic, byte* payload, unsigned int length)
 {
   if (strncmp(MQTT_TOPIC, topic, strlen(MQTT_TOPIC)) != 0) {
     // this is not the topic you are looking for
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-    digitalWrite(BUILTIN_LED, LOW);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-    digitalWrite(BUILTIN_LED, LOW);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-    digitalWrite(BUILTIN_LED, LOW);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-    digitalWrite(BUILTIN_LED, LOW);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
     return;
   }
 
-  if (length == 2 && strncmp("ON", (char*)payload, 2)) {
-    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is active low on the ESP-01)
+  if (length == 2 && strncmp("ON", (char*)payload, 2) == 0) {
     setSwitch(1);
     lastCommandReceived = millis();
-  } else if (length == 3 && strncmp("OFF", (char*)payload, 3)) {
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
+  } else if (length == 3 && strncmp("OFF", (char*)payload, 3) == 0) {
     setSwitch(0);
     lastCommandReceived = millis();
-  } else {
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-    digitalWrite(BUILTIN_LED, LOW);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-    digitalWrite(BUILTIN_LED, LOW);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
   }
 }
 
@@ -109,18 +79,13 @@ void setSwitch(int status)
 {
   if (status == 1) {
     digitalWrite(TRANSISTOR_OUT_PIN, HIGH);
-    if (client.connected()) {
-      client.publish("openhab/Downstairs_Furnace_Test_Echo/state", String("ON").c_str());
-    }
   } else {
     digitalWrite(TRANSISTOR_OUT_PIN, LOW);
-    if (client.connected()) {
-      client.publish("openhab/Downstairs_Furnace_Test_Echo/state", String("OFF").c_str());
-    }
   }
 }
 
-boolean reconnect() {
+boolean reconnect()
+{
 #ifdef MQTT_USERNAME
   return client.connect(MQTT_CLIENT_ID, MQTT_USERNAME, MQTT_PASSWORD);
 #else
@@ -128,14 +93,12 @@ boolean reconnect() {
 #endif
 }
 
-void startWifi() {
+void startWifi()
+{
   delay(50);
 
   // Ensure that ESP8266 only starts up in Station mode
   WiFi.mode(WIFI_STA);
-
-  // Save some power, produce less corrupting heat
-  WiFi.setSleepMode(WIFI_LIGHT_SLEEP);
 
   // Set the hostname, reusing the mqtt client id
   WiFi.hostname(MQTT_CLIENT_ID);
